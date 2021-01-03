@@ -207,6 +207,12 @@ didDisconnectWithUser:(GIDGoogleUser *)user
     [UNUserNotificationCenter currentNotificationCenter].delegate = self;
 }
 
++ (NSNumber*)getContentAvailableValue: (NSDictionary*)aps {
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    formatter.numberStyle = NSNumberFormatterDecimalStyle;
+    return [formatter numberFromString:[aps objectForKey:@"content-available"]];
+}
+
 //Tells the app that a remote notification arrived that indicates there is data to be fetched.
 // Called when a message arrives in the foreground and remote notifications permission has been granted
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo
@@ -218,9 +224,7 @@ didDisconnectWithUser:(GIDGoogleUser *)user
         NSDictionary* aps = [mutableUserInfo objectForKey:@"aps"];
         bool isContentAvailable = false;
         if([aps objectForKey:@"alert"] != nil){
-            NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-            formatter.numberStyle = NSNumberFormatterDecimalStyle;
-            isContentAvailable = [formatter numberFromString:[aps objectForKey:@"content-available"]];
+            isContentAvailable = [AppDelegate getContentAvailableValue:aps];
 //            isContentAvailable = [[aps objectForKey:@"content-available"] isEqualToNumber:[NSNumber numberWithInt:1]];
             [mutableUserInfo setValue:@"notification" forKey:@"messageType"];
             NSString* tap;
@@ -281,19 +285,24 @@ didDisconnectWithUser:(GIDGoogleUser *)user
     
     // Extract APNS notification keys
     NSDictionary* aps = [messageData objectForKey:@"aps"];
-    if([aps objectForKey:@"alert"] != nil){
-        NSDictionary* alert = [aps objectForKey:@"alert"];
-        if([alert objectForKey:@"title"] != nil){
-            title = [alert objectForKey:@"title"];
-        }
-        if([alert objectForKey:@"body"] != nil){
-            body = [alert objectForKey:@"body"];
-        }
-        if([aps objectForKey:@"sound"] != nil){
-            sound = [aps objectForKey:@"sound"];
-        }
-        if([aps objectForKey:@"badge"] != nil){
-            badge = [aps objectForKey:@"badge"];
+    if([aps objectForKey:@"alert"] != nil) {
+        
+        if ([[aps objectForKey:@"alert"] isKindOfClass:[NSString class]]) {
+            body = [aps objectForKey:@"alert"];
+        } else {
+            NSDictionary* alert = [aps objectForKey:@"alert"];
+            if([alert objectForKey:@"title"] != nil){
+                title = [alert objectForKey:@"title"];
+            }
+            if([alert objectForKey:@"body"] != nil){
+                body = [alert objectForKey:@"body"];
+            }
+            if([aps objectForKey:@"sound"] != nil){
+                sound = [aps objectForKey:@"sound"];
+            }
+            if([aps objectForKey:@"badge"] != nil){
+                badge = [aps objectForKey:@"badge"];
+            }
         }
     }
     
@@ -311,7 +320,7 @@ didDisconnectWithUser:(GIDGoogleUser *)user
         badge = [messageData objectForKey:@"notification_ios_badge"];
     }
    
-    if(title == nil || body == nil){
+    if(body == nil){
         return;
     }
     
@@ -404,11 +413,11 @@ didDisconnectWithUser:(GIDGoogleUser *)user
 
         
         NSDictionary* aps = [mutableUserInfo objectForKey:@"aps"];
-        bool isContentAvailable = [[aps objectForKey:@"content-available"] isEqualToNumber:[NSNumber numberWithInt:1]];
-        if(isContentAvailable){
-            [FirebasePlugin.firebasePlugin _logError:@"willPresentNotification: aborting as content-available:1 so system notification will be shown"];
-            return;
-        }
+//        bool isContentAvailable = [AppDelegate getContentAvailableValue:aps];
+////        if(isContentAvailable){
+////            [FirebasePlugin.firebasePlugin _logError:@"willPresentNotification: aborting as content-available:1 so system notification will be shown"];
+////            return;
+////        }
         
         bool showForegroundNotification = [mutableUserInfo objectForKey:@"notification_foreground"];
         bool hasAlert = [aps objectForKey:@"alert"] != nil;

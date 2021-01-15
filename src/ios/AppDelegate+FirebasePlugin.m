@@ -413,11 +413,11 @@ didDisconnectWithUser:(GIDGoogleUser *)user
 
         
         NSDictionary* aps = [mutableUserInfo objectForKey:@"aps"];
-//        bool isContentAvailable = [AppDelegate getContentAvailableValue:aps];
-////        if(isContentAvailable){
-////            [FirebasePlugin.firebasePlugin _logError:@"willPresentNotification: aborting as content-available:1 so system notification will be shown"];
-////            return;
-////        }
+        bool isContentAvailable = [AppDelegate getContentAvailableValue:aps];
+        if(isContentAvailable){
+            [FirebasePlugin.firebasePlugin _logError:@"willPresentNotification: aborting as content-available:1 so system notification will be shown"];
+            return;
+        }
         
         bool showForegroundNotification = [mutableUserInfo objectForKey:@"notification_foreground"];
         bool hasAlert = [aps objectForKey:@"alert"] != nil;
